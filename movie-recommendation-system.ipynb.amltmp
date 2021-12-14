@@ -1,0 +1,1101 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "source": [
+        "import numpy as np # linear algebra\r\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\r\n",
+        "\r\n",
+        "import os\r\n",
+        "for dirname, _, filenames in os.walk('/kaggle/input'):\r\n",
+        "    for filename in filenames:\r\n",
+        "        print(os.path.join(dirname, filename))"
+      ],
+      "outputs": [],
+      "execution_count": 1,
+      "metadata": {
+        "gather": {
+          "logged": 1639472720267
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies = pd.read_csv('tmdb_5000_movies.csv')\r\n",
+        "credits = pd.read_csv('tmdb_5000_credits.csv')"
+      ],
+      "outputs": [],
+      "execution_count": 2,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472720729
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.head(5)"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 3,
+          "data": {
+            "text/plain": "      budget                                             genres  \\\n0  237000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n1  300000000  [{\"id\": 12, \"name\": \"Adventure\"}, {\"id\": 14, \"...   \n2  245000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n3  250000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 80, \"nam...   \n4  260000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n\n                                       homepage      id  \\\n0                   http://www.avatarmovie.com/   19995   \n1  http://disney.go.com/disneypictures/pirates/     285   \n2   http://www.sonypictures.com/movies/spectre/  206647   \n3            http://www.thedarkknightrises.com/   49026   \n4          http://movies.disney.com/john-carter   49529   \n\n                                            keywords original_language  \\\n0  [{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...                en   \n1  [{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...                en   \n2  [{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...                en   \n3  [{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...                en   \n4  [{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...                en   \n\n                             original_title  \\\n0                                    Avatar   \n1  Pirates of the Caribbean: At World's End   \n2                                   Spectre   \n3                     The Dark Knight Rises   \n4                               John Carter   \n\n                                            overview  popularity  \\\n0  In the 22nd century, a paraplegic Marine is di...  150.437577   \n1  Captain Barbossa, long believed to be dead, ha...  139.082615   \n2  A cryptic message from Bond’s past sends him o...  107.376788   \n3  Following the death of District Attorney Harve...  112.312950   \n4  John Carter is a war-weary, former military ca...   43.926995   \n\n                                production_companies  \\\n0  [{\"name\": \"Ingenious Film Partners\", \"id\": 289...   \n1  [{\"name\": \"Walt Disney Pictures\", \"id\": 2}, {\"...   \n2  [{\"name\": \"Columbia Pictures\", \"id\": 5}, {\"nam...   \n3  [{\"name\": \"Legendary Pictures\", \"id\": 923}, {\"...   \n4        [{\"name\": \"Walt Disney Pictures\", \"id\": 2}]   \n\n                                production_countries release_date     revenue  \\\n0  [{\"iso_3166_1\": \"US\", \"name\": \"United States o...   2009-12-10  2787965087   \n1  [{\"iso_3166_1\": \"US\", \"name\": \"United States o...   2007-05-19   961000000   \n2  [{\"iso_3166_1\": \"GB\", \"name\": \"United Kingdom\"...   2015-10-26   880674609   \n3  [{\"iso_3166_1\": \"US\", \"name\": \"United States o...   2012-07-16  1084939099   \n4  [{\"iso_3166_1\": \"US\", \"name\": \"United States o...   2012-03-07   284139100   \n\n   runtime                                   spoken_languages    status  \\\n0    162.0  [{\"iso_639_1\": \"en\", \"name\": \"English\"}, {\"iso...  Released   \n1    169.0           [{\"iso_639_1\": \"en\", \"name\": \"English\"}]  Released   \n2    148.0  [{\"iso_639_1\": \"fr\", \"name\": \"Fran\\u00e7ais\"},...  Released   \n3    165.0           [{\"iso_639_1\": \"en\", \"name\": \"English\"}]  Released   \n4    132.0           [{\"iso_639_1\": \"en\", \"name\": \"English\"}]  Released   \n\n                                          tagline  \\\n0                     Enter the World of Pandora.   \n1  At the end of the world, the adventure begins.   \n2                           A Plan No One Escapes   \n3                                 The Legend Ends   \n4            Lost in our world, found in another.   \n\n                                      title  vote_average  vote_count  \n0                                    Avatar           7.2       11800  \n1  Pirates of the Caribbean: At World's End           6.9        4500  \n2                                   Spectre           6.3        4466  \n3                     The Dark Knight Rises           7.6        9106  \n4                               John Carter           6.1        2124  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>budget</th>\n      <th>genres</th>\n      <th>homepage</th>\n      <th>id</th>\n      <th>keywords</th>\n      <th>original_language</th>\n      <th>original_title</th>\n      <th>overview</th>\n      <th>popularity</th>\n      <th>production_companies</th>\n      <th>production_countries</th>\n      <th>release_date</th>\n      <th>revenue</th>\n      <th>runtime</th>\n      <th>spoken_languages</th>\n      <th>status</th>\n      <th>tagline</th>\n      <th>title</th>\n      <th>vote_average</th>\n      <th>vote_count</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>237000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>http://www.avatarmovie.com/</td>\n      <td>19995</td>\n      <td>[{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...</td>\n      <td>en</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n      <td>150.437577</td>\n      <td>[{\"name\": \"Ingenious Film Partners\", \"id\": 289...</td>\n      <td>[{\"iso_3166_1\": \"US\", \"name\": \"United States o...</td>\n      <td>2009-12-10</td>\n      <td>2787965087</td>\n      <td>162.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}, {\"iso...</td>\n      <td>Released</td>\n      <td>Enter the World of Pandora.</td>\n      <td>Avatar</td>\n      <td>7.2</td>\n      <td>11800</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>300000000</td>\n      <td>[{\"id\": 12, \"name\": \"Adventure\"}, {\"id\": 14, \"...</td>\n      <td>http://disney.go.com/disneypictures/pirates/</td>\n      <td>285</td>\n      <td>[{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...</td>\n      <td>en</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n      <td>139.082615</td>\n      <td>[{\"name\": \"Walt Disney Pictures\", \"id\": 2}, {\"...</td>\n      <td>[{\"iso_3166_1\": \"US\", \"name\": \"United States o...</td>\n      <td>2007-05-19</td>\n      <td>961000000</td>\n      <td>169.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}]</td>\n      <td>Released</td>\n      <td>At the end of the world, the adventure begins.</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>6.9</td>\n      <td>4500</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>245000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>http://www.sonypictures.com/movies/spectre/</td>\n      <td>206647</td>\n      <td>[{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...</td>\n      <td>en</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n      <td>107.376788</td>\n      <td>[{\"name\": \"Columbia Pictures\", \"id\": 5}, {\"nam...</td>\n      <td>[{\"iso_3166_1\": \"GB\", \"name\": \"United Kingdom\"...</td>\n      <td>2015-10-26</td>\n      <td>880674609</td>\n      <td>148.0</td>\n      <td>[{\"iso_639_1\": \"fr\", \"name\": \"Fran\\u00e7ais\"},...</td>\n      <td>Released</td>\n      <td>A Plan No One Escapes</td>\n      <td>Spectre</td>\n      <td>6.3</td>\n      <td>4466</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>250000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 80, \"nam...</td>\n      <td>http://www.thedarkknightrises.com/</td>\n      <td>49026</td>\n      <td>[{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...</td>\n      <td>en</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n      <td>112.312950</td>\n      <td>[{\"name\": \"Legendary Pictures\", \"id\": 923}, {\"...</td>\n      <td>[{\"iso_3166_1\": \"US\", \"name\": \"United States o...</td>\n      <td>2012-07-16</td>\n      <td>1084939099</td>\n      <td>165.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}]</td>\n      <td>Released</td>\n      <td>The Legend Ends</td>\n      <td>The Dark Knight Rises</td>\n      <td>7.6</td>\n      <td>9106</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>260000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>http://movies.disney.com/john-carter</td>\n      <td>49529</td>\n      <td>[{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...</td>\n      <td>en</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n      <td>43.926995</td>\n      <td>[{\"name\": \"Walt Disney Pictures\", \"id\": 2}]</td>\n      <td>[{\"iso_3166_1\": \"US\", \"name\": \"United States o...</td>\n      <td>2012-03-07</td>\n      <td>284139100</td>\n      <td>132.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}]</td>\n      <td>Released</td>\n      <td>Lost in our world, found in another.</td>\n      <td>John Carter</td>\n      <td>6.1</td>\n      <td>2124</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 3,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472721207
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.shape"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 4,
+          "data": {
+            "text/plain": "(4803, 20)"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 4,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472721806
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "credits.head()"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 5,
+          "data": {
+            "text/plain": "   movie_id                                     title  \\\n0     19995                                    Avatar   \n1       285  Pirates of the Caribbean: At World's End   \n2    206647                                   Spectre   \n3     49026                     The Dark Knight Rises   \n4     49529                               John Carter   \n\n                                                cast  \\\n0  [{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...   \n1  [{\"cast_id\": 4, \"character\": \"Captain Jack Spa...   \n2  [{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...   \n3  [{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...   \n4  [{\"cast_id\": 5, \"character\": \"John Carter\", \"c...   \n\n                                                crew  \n0  [{\"credit_id\": \"52fe48009251416c750aca23\", \"de...  \n1  [{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...  \n2  [{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...  \n3  [{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...  \n4  [{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>19995</td>\n      <td>Avatar</td>\n      <td>[{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...</td>\n      <td>[{\"credit_id\": \"52fe48009251416c750aca23\", \"de...</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>285</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>[{\"cast_id\": 4, \"character\": \"Captain Jack Spa...</td>\n      <td>[{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>206647</td>\n      <td>Spectre</td>\n      <td>[{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...</td>\n      <td>[{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>49026</td>\n      <td>The Dark Knight Rises</td>\n      <td>[{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...</td>\n      <td>[{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>49529</td>\n      <td>John Carter</td>\n      <td>[{\"cast_id\": 5, \"character\": \"John Carter\", \"c...</td>\n      <td>[{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 5,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472722241
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies = movies.merge(credits,on='title')"
+      ],
+      "outputs": [],
+      "execution_count": 6,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472722667
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.head()\r\n",
+        "# budget\r\n",
+        "# homepage\r\n",
+        "# id\r\n",
+        "# original_language\r\n",
+        "# original_title\r\n",
+        "# popularity\r\n",
+        "# production_comapny\r\n",
+        "# production_countries\r\n",
+        "# release-date(not sure)"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 7,
+          "data": {
+            "text/plain": "      budget                                             genres  \\\n0  237000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n1  300000000  [{\"id\": 12, \"name\": \"Adventure\"}, {\"id\": 14, \"...   \n2  245000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n3  250000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 80, \"nam...   \n4  260000000  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n\n                                       homepage      id  \\\n0                   http://www.avatarmovie.com/   19995   \n1  http://disney.go.com/disneypictures/pirates/     285   \n2   http://www.sonypictures.com/movies/spectre/  206647   \n3            http://www.thedarkknightrises.com/   49026   \n4          http://movies.disney.com/john-carter   49529   \n\n                                            keywords original_language  \\\n0  [{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...                en   \n1  [{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...                en   \n2  [{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...                en   \n3  [{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...                en   \n4  [{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...                en   \n\n                             original_title  \\\n0                                    Avatar   \n1  Pirates of the Caribbean: At World's End   \n2                                   Spectre   \n3                     The Dark Knight Rises   \n4                               John Carter   \n\n                                            overview  popularity  \\\n0  In the 22nd century, a paraplegic Marine is di...  150.437577   \n1  Captain Barbossa, long believed to be dead, ha...  139.082615   \n2  A cryptic message from Bond’s past sends him o...  107.376788   \n3  Following the death of District Attorney Harve...  112.312950   \n4  John Carter is a war-weary, former military ca...   43.926995   \n\n                                production_companies  ... runtime  \\\n0  [{\"name\": \"Ingenious Film Partners\", \"id\": 289...  ...   162.0   \n1  [{\"name\": \"Walt Disney Pictures\", \"id\": 2}, {\"...  ...   169.0   \n2  [{\"name\": \"Columbia Pictures\", \"id\": 5}, {\"nam...  ...   148.0   \n3  [{\"name\": \"Legendary Pictures\", \"id\": 923}, {\"...  ...   165.0   \n4        [{\"name\": \"Walt Disney Pictures\", \"id\": 2}]  ...   132.0   \n\n                                    spoken_languages    status  \\\n0  [{\"iso_639_1\": \"en\", \"name\": \"English\"}, {\"iso...  Released   \n1           [{\"iso_639_1\": \"en\", \"name\": \"English\"}]  Released   \n2  [{\"iso_639_1\": \"fr\", \"name\": \"Fran\\u00e7ais\"},...  Released   \n3           [{\"iso_639_1\": \"en\", \"name\": \"English\"}]  Released   \n4           [{\"iso_639_1\": \"en\", \"name\": \"English\"}]  Released   \n\n                                          tagline  \\\n0                     Enter the World of Pandora.   \n1  At the end of the world, the adventure begins.   \n2                           A Plan No One Escapes   \n3                                 The Legend Ends   \n4            Lost in our world, found in another.   \n\n                                      title vote_average vote_count movie_id  \\\n0                                    Avatar          7.2      11800    19995   \n1  Pirates of the Caribbean: At World's End          6.9       4500      285   \n2                                   Spectre          6.3       4466   206647   \n3                     The Dark Knight Rises          7.6       9106    49026   \n4                               John Carter          6.1       2124    49529   \n\n                                                cast  \\\n0  [{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...   \n1  [{\"cast_id\": 4, \"character\": \"Captain Jack Spa...   \n2  [{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...   \n3  [{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...   \n4  [{\"cast_id\": 5, \"character\": \"John Carter\", \"c...   \n\n                                                crew  \n0  [{\"credit_id\": \"52fe48009251416c750aca23\", \"de...  \n1  [{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...  \n2  [{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...  \n3  [{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...  \n4  [{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...  \n\n[5 rows x 23 columns]",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>budget</th>\n      <th>genres</th>\n      <th>homepage</th>\n      <th>id</th>\n      <th>keywords</th>\n      <th>original_language</th>\n      <th>original_title</th>\n      <th>overview</th>\n      <th>popularity</th>\n      <th>production_companies</th>\n      <th>...</th>\n      <th>runtime</th>\n      <th>spoken_languages</th>\n      <th>status</th>\n      <th>tagline</th>\n      <th>title</th>\n      <th>vote_average</th>\n      <th>vote_count</th>\n      <th>movie_id</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>237000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>http://www.avatarmovie.com/</td>\n      <td>19995</td>\n      <td>[{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...</td>\n      <td>en</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n      <td>150.437577</td>\n      <td>[{\"name\": \"Ingenious Film Partners\", \"id\": 289...</td>\n      <td>...</td>\n      <td>162.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}, {\"iso...</td>\n      <td>Released</td>\n      <td>Enter the World of Pandora.</td>\n      <td>Avatar</td>\n      <td>7.2</td>\n      <td>11800</td>\n      <td>19995</td>\n      <td>[{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...</td>\n      <td>[{\"credit_id\": \"52fe48009251416c750aca23\", \"de...</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>300000000</td>\n      <td>[{\"id\": 12, \"name\": \"Adventure\"}, {\"id\": 14, \"...</td>\n      <td>http://disney.go.com/disneypictures/pirates/</td>\n      <td>285</td>\n      <td>[{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...</td>\n      <td>en</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n      <td>139.082615</td>\n      <td>[{\"name\": \"Walt Disney Pictures\", \"id\": 2}, {\"...</td>\n      <td>...</td>\n      <td>169.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}]</td>\n      <td>Released</td>\n      <td>At the end of the world, the adventure begins.</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>6.9</td>\n      <td>4500</td>\n      <td>285</td>\n      <td>[{\"cast_id\": 4, \"character\": \"Captain Jack Spa...</td>\n      <td>[{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>245000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>http://www.sonypictures.com/movies/spectre/</td>\n      <td>206647</td>\n      <td>[{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...</td>\n      <td>en</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n      <td>107.376788</td>\n      <td>[{\"name\": \"Columbia Pictures\", \"id\": 5}, {\"nam...</td>\n      <td>...</td>\n      <td>148.0</td>\n      <td>[{\"iso_639_1\": \"fr\", \"name\": \"Fran\\u00e7ais\"},...</td>\n      <td>Released</td>\n      <td>A Plan No One Escapes</td>\n      <td>Spectre</td>\n      <td>6.3</td>\n      <td>4466</td>\n      <td>206647</td>\n      <td>[{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...</td>\n      <td>[{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>250000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 80, \"nam...</td>\n      <td>http://www.thedarkknightrises.com/</td>\n      <td>49026</td>\n      <td>[{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...</td>\n      <td>en</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n      <td>112.312950</td>\n      <td>[{\"name\": \"Legendary Pictures\", \"id\": 923}, {\"...</td>\n      <td>...</td>\n      <td>165.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}]</td>\n      <td>Released</td>\n      <td>The Legend Ends</td>\n      <td>The Dark Knight Rises</td>\n      <td>7.6</td>\n      <td>9106</td>\n      <td>49026</td>\n      <td>[{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...</td>\n      <td>[{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>260000000</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>http://movies.disney.com/john-carter</td>\n      <td>49529</td>\n      <td>[{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...</td>\n      <td>en</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n      <td>43.926995</td>\n      <td>[{\"name\": \"Walt Disney Pictures\", \"id\": 2}]</td>\n      <td>...</td>\n      <td>132.0</td>\n      <td>[{\"iso_639_1\": \"en\", \"name\": \"English\"}]</td>\n      <td>Released</td>\n      <td>Lost in our world, found in another.</td>\n      <td>John Carter</td>\n      <td>6.1</td>\n      <td>2124</td>\n      <td>49529</td>\n      <td>[{\"cast_id\": 5, \"character\": \"John Carter\", \"c...</td>\n      <td>[{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...</td>\n    </tr>\n  </tbody>\n</table>\n<p>5 rows × 23 columns</p>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 7,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472723121
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies = movies[['movie_id','title','overview','genres','keywords','cast','crew']]"
+      ],
+      "outputs": [],
+      "execution_count": 8,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472723579
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.head()"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 9,
+          "data": {
+            "text/plain": "   movie_id                                     title  \\\n0     19995                                    Avatar   \n1       285  Pirates of the Caribbean: At World's End   \n2    206647                                   Spectre   \n3     49026                     The Dark Knight Rises   \n4     49529                               John Carter   \n\n                                            overview  \\\n0  In the 22nd century, a paraplegic Marine is di...   \n1  Captain Barbossa, long believed to be dead, ha...   \n2  A cryptic message from Bond’s past sends him o...   \n3  Following the death of District Attorney Harve...   \n4  John Carter is a war-weary, former military ca...   \n\n                                              genres  \\\n0  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n1  [{\"id\": 12, \"name\": \"Adventure\"}, {\"id\": 14, \"...   \n2  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n3  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 80, \"nam...   \n4  [{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...   \n\n                                            keywords  \\\n0  [{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...   \n1  [{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...   \n2  [{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...   \n3  [{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...   \n4  [{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...   \n\n                                                cast  \\\n0  [{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...   \n1  [{\"cast_id\": 4, \"character\": \"Captain Jack Spa...   \n2  [{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...   \n3  [{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...   \n4  [{\"cast_id\": 5, \"character\": \"John Carter\", \"c...   \n\n                                                crew  \n0  [{\"credit_id\": \"52fe48009251416c750aca23\", \"de...  \n1  [{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...  \n2  [{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...  \n3  [{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...  \n4  [{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>overview</th>\n      <th>genres</th>\n      <th>keywords</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>19995</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>[{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...</td>\n      <td>[{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...</td>\n      <td>[{\"credit_id\": \"52fe48009251416c750aca23\", \"de...</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>285</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n      <td>[{\"id\": 12, \"name\": \"Adventure\"}, {\"id\": 14, \"...</td>\n      <td>[{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...</td>\n      <td>[{\"cast_id\": 4, \"character\": \"Captain Jack Spa...</td>\n      <td>[{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>206647</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>[{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...</td>\n      <td>[{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...</td>\n      <td>[{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>49026</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 80, \"nam...</td>\n      <td>[{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...</td>\n      <td>[{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...</td>\n      <td>[{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>49529</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n      <td>[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"nam...</td>\n      <td>[{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...</td>\n      <td>[{\"cast_id\": 5, \"character\": \"John Carter\", \"c...</td>\n      <td>[{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 9,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472724030
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import ast"
+      ],
+      "outputs": [],
+      "execution_count": 10,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472724478
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def convert(text):\r\n",
+        "    L = []\r\n",
+        "    for i in ast.literal_eval(text):\r\n",
+        "        L.append(i['name']) \r\n",
+        "    return L"
+      ],
+      "outputs": [],
+      "execution_count": 11,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472724920
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.dropna(inplace=True)"
+      ],
+      "outputs": [],
+      "execution_count": 12,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472725355
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies['genres'] = movies['genres'].apply(convert)"
+      ],
+      "outputs": [],
+      "execution_count": 13,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472725785
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.head()"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 14,
+          "data": {
+            "text/plain": "   movie_id                                     title  \\\n0     19995                                    Avatar   \n1       285  Pirates of the Caribbean: At World's End   \n2    206647                                   Spectre   \n3     49026                     The Dark Knight Rises   \n4     49529                               John Carter   \n\n                                            overview  \\\n0  In the 22nd century, a paraplegic Marine is di...   \n1  Captain Barbossa, long believed to be dead, ha...   \n2  A cryptic message from Bond’s past sends him o...   \n3  Following the death of District Attorney Harve...   \n4  John Carter is a war-weary, former military ca...   \n\n                                          genres  \\\n0  [Action, Adventure, Fantasy, Science Fiction]   \n1                   [Adventure, Fantasy, Action]   \n2                     [Action, Adventure, Crime]   \n3               [Action, Crime, Drama, Thriller]   \n4           [Action, Adventure, Science Fiction]   \n\n                                            keywords  \\\n0  [{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...   \n1  [{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...   \n2  [{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...   \n3  [{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...   \n4  [{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...   \n\n                                                cast  \\\n0  [{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...   \n1  [{\"cast_id\": 4, \"character\": \"Captain Jack Spa...   \n2  [{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...   \n3  [{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...   \n4  [{\"cast_id\": 5, \"character\": \"John Carter\", \"c...   \n\n                                                crew  \n0  [{\"credit_id\": \"52fe48009251416c750aca23\", \"de...  \n1  [{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...  \n2  [{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...  \n3  [{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...  \n4  [{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>overview</th>\n      <th>genres</th>\n      <th>keywords</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>19995</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n      <td>[Action, Adventure, Fantasy, Science Fiction]</td>\n      <td>[{\"id\": 1463, \"name\": \"culture clash\"}, {\"id\":...</td>\n      <td>[{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...</td>\n      <td>[{\"credit_id\": \"52fe48009251416c750aca23\", \"de...</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>285</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n      <td>[Adventure, Fantasy, Action]</td>\n      <td>[{\"id\": 270, \"name\": \"ocean\"}, {\"id\": 726, \"na...</td>\n      <td>[{\"cast_id\": 4, \"character\": \"Captain Jack Spa...</td>\n      <td>[{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>206647</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n      <td>[Action, Adventure, Crime]</td>\n      <td>[{\"id\": 470, \"name\": \"spy\"}, {\"id\": 818, \"name...</td>\n      <td>[{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...</td>\n      <td>[{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>49026</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n      <td>[Action, Crime, Drama, Thriller]</td>\n      <td>[{\"id\": 849, \"name\": \"dc comics\"}, {\"id\": 853,...</td>\n      <td>[{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...</td>\n      <td>[{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>49529</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n      <td>[Action, Adventure, Science Fiction]</td>\n      <td>[{\"id\": 818, \"name\": \"based on novel\"}, {\"id\":...</td>\n      <td>[{\"cast_id\": 5, \"character\": \"John Carter\", \"c...</td>\n      <td>[{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 14,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472726243
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies['keywords'] = movies['keywords'].apply(convert)\r\n"
+      ],
+      "outputs": [],
+      "execution_count": 15,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472726684
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.head()"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 16,
+          "data": {
+            "text/plain": "   movie_id                                     title  \\\n0     19995                                    Avatar   \n1       285  Pirates of the Caribbean: At World's End   \n2    206647                                   Spectre   \n3     49026                     The Dark Knight Rises   \n4     49529                               John Carter   \n\n                                            overview  \\\n0  In the 22nd century, a paraplegic Marine is di...   \n1  Captain Barbossa, long believed to be dead, ha...   \n2  A cryptic message from Bond’s past sends him o...   \n3  Following the death of District Attorney Harve...   \n4  John Carter is a war-weary, former military ca...   \n\n                                          genres  \\\n0  [Action, Adventure, Fantasy, Science Fiction]   \n1                   [Adventure, Fantasy, Action]   \n2                     [Action, Adventure, Crime]   \n3               [Action, Crime, Drama, Thriller]   \n4           [Action, Adventure, Science Fiction]   \n\n                                            keywords  \\\n0  [culture clash, future, space war, space colon...   \n1  [ocean, drug abuse, exotic island, east india ...   \n2  [spy, based on novel, secret agent, sequel, mi...   \n3  [dc comics, crime fighter, terrorist, secret i...   \n4  [based on novel, mars, medallion, space travel...   \n\n                                                cast  \\\n0  [{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...   \n1  [{\"cast_id\": 4, \"character\": \"Captain Jack Spa...   \n2  [{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...   \n3  [{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...   \n4  [{\"cast_id\": 5, \"character\": \"John Carter\", \"c...   \n\n                                                crew  \n0  [{\"credit_id\": \"52fe48009251416c750aca23\", \"de...  \n1  [{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...  \n2  [{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...  \n3  [{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...  \n4  [{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>overview</th>\n      <th>genres</th>\n      <th>keywords</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>19995</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n      <td>[Action, Adventure, Fantasy, Science Fiction]</td>\n      <td>[culture clash, future, space war, space colon...</td>\n      <td>[{\"cast_id\": 242, \"character\": \"Jake Sully\", \"...</td>\n      <td>[{\"credit_id\": \"52fe48009251416c750aca23\", \"de...</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>285</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n      <td>[Adventure, Fantasy, Action]</td>\n      <td>[ocean, drug abuse, exotic island, east india ...</td>\n      <td>[{\"cast_id\": 4, \"character\": \"Captain Jack Spa...</td>\n      <td>[{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>206647</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n      <td>[Action, Adventure, Crime]</td>\n      <td>[spy, based on novel, secret agent, sequel, mi...</td>\n      <td>[{\"cast_id\": 1, \"character\": \"James Bond\", \"cr...</td>\n      <td>[{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>49026</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n      <td>[Action, Crime, Drama, Thriller]</td>\n      <td>[dc comics, crime fighter, terrorist, secret i...</td>\n      <td>[{\"cast_id\": 2, \"character\": \"Bruce Wayne / Ba...</td>\n      <td>[{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>49529</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n      <td>[Action, Adventure, Science Fiction]</td>\n      <td>[based on novel, mars, medallion, space travel...</td>\n      <td>[{\"cast_id\": 5, \"character\": \"John Carter\", \"c...</td>\n      <td>[{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 16,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472727136
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import ast\r\n",
+        "ast.literal_eval('[{\"id\": 28, \"name\": \"Action\"}, {\"id\": 12, \"name\": \"Adventure\"}, {\"id\": 14, \"name\": \"Fantasy\"}, {\"id\": 878, \"name\": \"Science Fiction\"}]')"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 17,
+          "data": {
+            "text/plain": "[{'id': 28, 'name': 'Action'},\n {'id': 12, 'name': 'Adventure'},\n {'id': 14, 'name': 'Fantasy'},\n {'id': 878, 'name': 'Science Fiction'}]"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 17,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472727601
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def convert3(text):\r\n",
+        "    L = []\r\n",
+        "    counter = 0\r\n",
+        "    for i in ast.literal_eval(text):\r\n",
+        "        if counter < 3:\r\n",
+        "            L.append(i['name'])\r\n",
+        "        counter+=1\r\n",
+        "    return L"
+      ],
+      "outputs": [],
+      "execution_count": 18,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472728033
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies['cast'] = movies['cast'].apply(convert)\r\n",
+        "movies.head()"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 19,
+          "data": {
+            "text/plain": "   movie_id                                     title  \\\n0     19995                                    Avatar   \n1       285  Pirates of the Caribbean: At World's End   \n2    206647                                   Spectre   \n3     49026                     The Dark Knight Rises   \n4     49529                               John Carter   \n\n                                            overview  \\\n0  In the 22nd century, a paraplegic Marine is di...   \n1  Captain Barbossa, long believed to be dead, ha...   \n2  A cryptic message from Bond’s past sends him o...   \n3  Following the death of District Attorney Harve...   \n4  John Carter is a war-weary, former military ca...   \n\n                                          genres  \\\n0  [Action, Adventure, Fantasy, Science Fiction]   \n1                   [Adventure, Fantasy, Action]   \n2                     [Action, Adventure, Crime]   \n3               [Action, Crime, Drama, Thriller]   \n4           [Action, Adventure, Science Fiction]   \n\n                                            keywords  \\\n0  [culture clash, future, space war, space colon...   \n1  [ocean, drug abuse, exotic island, east india ...   \n2  [spy, based on novel, secret agent, sequel, mi...   \n3  [dc comics, crime fighter, terrorist, secret i...   \n4  [based on novel, mars, medallion, space travel...   \n\n                                                cast  \\\n0  [Sam Worthington, Zoe Saldana, Sigourney Weave...   \n1  [Johnny Depp, Orlando Bloom, Keira Knightley, ...   \n2  [Daniel Craig, Christoph Waltz, Léa Seydoux, R...   \n3  [Christian Bale, Michael Caine, Gary Oldman, A...   \n4  [Taylor Kitsch, Lynn Collins, Samantha Morton,...   \n\n                                                crew  \n0  [{\"credit_id\": \"52fe48009251416c750aca23\", \"de...  \n1  [{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...  \n2  [{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...  \n3  [{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...  \n4  [{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>overview</th>\n      <th>genres</th>\n      <th>keywords</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>19995</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n      <td>[Action, Adventure, Fantasy, Science Fiction]</td>\n      <td>[culture clash, future, space war, space colon...</td>\n      <td>[Sam Worthington, Zoe Saldana, Sigourney Weave...</td>\n      <td>[{\"credit_id\": \"52fe48009251416c750aca23\", \"de...</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>285</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n      <td>[Adventure, Fantasy, Action]</td>\n      <td>[ocean, drug abuse, exotic island, east india ...</td>\n      <td>[Johnny Depp, Orlando Bloom, Keira Knightley, ...</td>\n      <td>[{\"credit_id\": \"52fe4232c3a36847f800b579\", \"de...</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>206647</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n      <td>[Action, Adventure, Crime]</td>\n      <td>[spy, based on novel, secret agent, sequel, mi...</td>\n      <td>[Daniel Craig, Christoph Waltz, Léa Seydoux, R...</td>\n      <td>[{\"credit_id\": \"54805967c3a36829b5002c41\", \"de...</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>49026</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n      <td>[Action, Crime, Drama, Thriller]</td>\n      <td>[dc comics, crime fighter, terrorist, secret i...</td>\n      <td>[Christian Bale, Michael Caine, Gary Oldman, A...</td>\n      <td>[{\"credit_id\": \"52fe4781c3a36847f81398c3\", \"de...</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>49529</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n      <td>[Action, Adventure, Science Fiction]</td>\n      <td>[based on novel, mars, medallion, space travel...</td>\n      <td>[Taylor Kitsch, Lynn Collins, Samantha Morton,...</td>\n      <td>[{\"credit_id\": \"52fe479ac3a36847f813eaa3\", \"de...</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 19,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472728498
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies['cast'] = movies['cast'].apply(lambda x:x[0:3])"
+      ],
+      "outputs": [],
+      "execution_count": 20,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472728931
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def fetch_director(text):\r\n",
+        "    L = []\r\n",
+        "    for i in ast.literal_eval(text):\r\n",
+        "        if i['job'] == 'Director':\r\n",
+        "            L.append(i['name'])\r\n",
+        "    return L"
+      ],
+      "outputs": [],
+      "execution_count": 21,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472729416
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies['crew'] = movies['crew'].apply(fetch_director)"
+      ],
+      "outputs": [],
+      "execution_count": 22,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472730539
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#movies['overview'] = movies['overview'].apply(lambda x:x.split())\r\n",
+        "movies.sample(5)"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 23,
+          "data": {
+            "text/plain": "      movie_id                                          title  \\\n4616      1550                                Pieces of April   \n329        122  The Lord of the Rings: The Return of the King   \n4750    244534                                Happy Christmas   \n1988      6478                                 Beyond the Sea   \n153      56292           Mission: Impossible - Ghost Protocol   \n\n                                               overview  \\\n4616  Quirky and rebellious April Burns lives with h...   \n329   Aragorn is revealed as the heir to the ancient...   \n4750  After a breakup with her boyfriend, a young wo...   \n1988  Based on the life and career of legendary ente...   \n153   In the 4th installment of the Mission Impossib...   \n\n                             genres  \\\n4616                [Comedy, Drama]   \n329    [Adventure, Fantasy, Action]   \n4750                [Comedy, Drama]   \n1988                 [Drama, Music]   \n153   [Action, Thriller, Adventure]   \n\n                                               keywords  \\\n4616  [sex, thanksgiving, road trip, love, independe...   \n329   [elves, orcs, middle-earth (tolkien), based on...   \n4750                    [family, mumblecore, christmas]   \n1988       [musical, perfectionist, rowboat, courtship]   \n153   [fight, sequel, mission, explosion, broken arm...   \n\n                                               cast             crew  \n4616  [Katie Holmes, Derek Luke, Patricia Clarkson]   [Peter Hedges]  \n329    [Elijah Wood, Ian McKellen, Viggo Mortensen]  [Peter Jackson]  \n4750  [Anna Kendrick, Melanie Lynskey, Mark Webber]   [Joe Swanberg]  \n1988    [Kevin Spacey, Kate Bosworth, John Goodman]   [Kevin Spacey]  \n153         [Tom Cruise, Jeremy Renner, Simon Pegg]      [Brad Bird]  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>overview</th>\n      <th>genres</th>\n      <th>keywords</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>4616</th>\n      <td>1550</td>\n      <td>Pieces of April</td>\n      <td>Quirky and rebellious April Burns lives with h...</td>\n      <td>[Comedy, Drama]</td>\n      <td>[sex, thanksgiving, road trip, love, independe...</td>\n      <td>[Katie Holmes, Derek Luke, Patricia Clarkson]</td>\n      <td>[Peter Hedges]</td>\n    </tr>\n    <tr>\n      <th>329</th>\n      <td>122</td>\n      <td>The Lord of the Rings: The Return of the King</td>\n      <td>Aragorn is revealed as the heir to the ancient...</td>\n      <td>[Adventure, Fantasy, Action]</td>\n      <td>[elves, orcs, middle-earth (tolkien), based on...</td>\n      <td>[Elijah Wood, Ian McKellen, Viggo Mortensen]</td>\n      <td>[Peter Jackson]</td>\n    </tr>\n    <tr>\n      <th>4750</th>\n      <td>244534</td>\n      <td>Happy Christmas</td>\n      <td>After a breakup with her boyfriend, a young wo...</td>\n      <td>[Comedy, Drama]</td>\n      <td>[family, mumblecore, christmas]</td>\n      <td>[Anna Kendrick, Melanie Lynskey, Mark Webber]</td>\n      <td>[Joe Swanberg]</td>\n    </tr>\n    <tr>\n      <th>1988</th>\n      <td>6478</td>\n      <td>Beyond the Sea</td>\n      <td>Based on the life and career of legendary ente...</td>\n      <td>[Drama, Music]</td>\n      <td>[musical, perfectionist, rowboat, courtship]</td>\n      <td>[Kevin Spacey, Kate Bosworth, John Goodman]</td>\n      <td>[Kevin Spacey]</td>\n    </tr>\n    <tr>\n      <th>153</th>\n      <td>56292</td>\n      <td>Mission: Impossible - Ghost Protocol</td>\n      <td>In the 4th installment of the Mission Impossib...</td>\n      <td>[Action, Thriller, Adventure]</td>\n      <td>[fight, sequel, mission, explosion, broken arm...</td>\n      <td>[Tom Cruise, Jeremy Renner, Simon Pegg]</td>\n      <td>[Brad Bird]</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 23,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472731002
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def collapse(L):\r\n",
+        "    L1 = []\r\n",
+        "    for i in L:\r\n",
+        "        L1.append(i.replace(\" \",\"\"))\r\n",
+        "    return L1"
+      ],
+      "outputs": [],
+      "execution_count": 24,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472731438
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies.head()"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 25,
+          "data": {
+            "text/plain": "   movie_id                                     title  \\\n0     19995                                    Avatar   \n1       285  Pirates of the Caribbean: At World's End   \n2    206647                                   Spectre   \n3     49026                     The Dark Knight Rises   \n4     49529                               John Carter   \n\n                                            overview  \\\n0  In the 22nd century, a paraplegic Marine is di...   \n1  Captain Barbossa, long believed to be dead, ha...   \n2  A cryptic message from Bond’s past sends him o...   \n3  Following the death of District Attorney Harve...   \n4  John Carter is a war-weary, former military ca...   \n\n                                          genres  \\\n0  [Action, Adventure, Fantasy, Science Fiction]   \n1                   [Adventure, Fantasy, Action]   \n2                     [Action, Adventure, Crime]   \n3               [Action, Crime, Drama, Thriller]   \n4           [Action, Adventure, Science Fiction]   \n\n                                            keywords  \\\n0  [culture clash, future, space war, space colon...   \n1  [ocean, drug abuse, exotic island, east india ...   \n2  [spy, based on novel, secret agent, sequel, mi...   \n3  [dc comics, crime fighter, terrorist, secret i...   \n4  [based on novel, mars, medallion, space travel...   \n\n                                               cast                 crew  \n0  [Sam Worthington, Zoe Saldana, Sigourney Weaver]      [James Cameron]  \n1     [Johnny Depp, Orlando Bloom, Keira Knightley]     [Gore Verbinski]  \n2      [Daniel Craig, Christoph Waltz, Léa Seydoux]         [Sam Mendes]  \n3      [Christian Bale, Michael Caine, Gary Oldman]  [Christopher Nolan]  \n4    [Taylor Kitsch, Lynn Collins, Samantha Morton]     [Andrew Stanton]  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>overview</th>\n      <th>genres</th>\n      <th>keywords</th>\n      <th>cast</th>\n      <th>crew</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>19995</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n      <td>[Action, Adventure, Fantasy, Science Fiction]</td>\n      <td>[culture clash, future, space war, space colon...</td>\n      <td>[Sam Worthington, Zoe Saldana, Sigourney Weaver]</td>\n      <td>[James Cameron]</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>285</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n      <td>[Adventure, Fantasy, Action]</td>\n      <td>[ocean, drug abuse, exotic island, east india ...</td>\n      <td>[Johnny Depp, Orlando Bloom, Keira Knightley]</td>\n      <td>[Gore Verbinski]</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>206647</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n      <td>[Action, Adventure, Crime]</td>\n      <td>[spy, based on novel, secret agent, sequel, mi...</td>\n      <td>[Daniel Craig, Christoph Waltz, Léa Seydoux]</td>\n      <td>[Sam Mendes]</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>49026</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n      <td>[Action, Crime, Drama, Thriller]</td>\n      <td>[dc comics, crime fighter, terrorist, secret i...</td>\n      <td>[Christian Bale, Michael Caine, Gary Oldman]</td>\n      <td>[Christopher Nolan]</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>49529</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n      <td>[Action, Adventure, Science Fiction]</td>\n      <td>[based on novel, mars, medallion, space travel...</td>\n      <td>[Taylor Kitsch, Lynn Collins, Samantha Morton]</td>\n      <td>[Andrew Stanton]</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 25,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472731893
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies['overview'] = movies['overview'].apply(lambda x:x.split())"
+      ],
+      "outputs": [],
+      "execution_count": 26,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472732341
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "movies['tags'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']"
+      ],
+      "outputs": [],
+      "execution_count": 27,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472732809
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "new = movies.drop(columns=['overview','genres','keywords','cast','crew'])\r\n",
+        "#new.head()"
+      ],
+      "outputs": [],
+      "execution_count": 28,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472733238
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "new['tags'] = new['tags'].apply(lambda x: \" \".join(x))\r\n",
+        "new.head()"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 29,
+          "data": {
+            "text/plain": "   movie_id                                     title  \\\n0     19995                                    Avatar   \n1       285  Pirates of the Caribbean: At World's End   \n2    206647                                   Spectre   \n3     49026                     The Dark Knight Rises   \n4     49529                               John Carter   \n\n                                                tags  \n0  In the 22nd century, a paraplegic Marine is di...  \n1  Captain Barbossa, long believed to be dead, ha...  \n2  A cryptic message from Bond’s past sends him o...  \n3  Following the death of District Attorney Harve...  \n4  John Carter is a war-weary, former military ca...  ",
+            "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>movie_id</th>\n      <th>title</th>\n      <th>tags</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>19995</td>\n      <td>Avatar</td>\n      <td>In the 22nd century, a paraplegic Marine is di...</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>285</td>\n      <td>Pirates of the Caribbean: At World's End</td>\n      <td>Captain Barbossa, long believed to be dead, ha...</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>206647</td>\n      <td>Spectre</td>\n      <td>A cryptic message from Bond’s past sends him o...</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>49026</td>\n      <td>The Dark Knight Rises</td>\n      <td>Following the death of District Attorney Harve...</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>49529</td>\n      <td>John Carter</td>\n      <td>John Carter is a war-weary, former military ca...</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 29,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472733695
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from sklearn.feature_extraction.text import CountVectorizer\r\n",
+        "cv = CountVectorizer(max_features=5000,stop_words='english')"
+      ],
+      "outputs": [],
+      "execution_count": 30,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472734133
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "vector = cv.fit_transform(new['tags']).toarray()"
+      ],
+      "outputs": [],
+      "execution_count": 31,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472734564
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "vector.shape"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 32,
+          "data": {
+            "text/plain": "(4806, 5000)"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 32,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472735022
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from sklearn.metrics.pairwise import cosine_similarity"
+      ],
+      "outputs": [],
+      "execution_count": 33,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472735461
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "similarity = cosine_similarity(vector)"
+      ],
+      "outputs": [],
+      "execution_count": 34,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472735902
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "similarity"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 35,
+          "data": {
+            "text/plain": "array([[1.        , 0.06885304, 0.04948717, ..., 0.03142697, 0.05410018,\n        0.        ],\n       [0.06885304, 1.        , 0.04259177, ..., 0.04057204, 0.        ,\n        0.        ],\n       [0.04948717, 0.04259177, 1.        , ..., 0.01944039, 0.08924215,\n        0.        ],\n       ...,\n       [0.03142697, 0.04057204, 0.01944039, ..., 1.        , 0.06375767,\n        0.03230011],\n       [0.05410018, 0.        , 0.08924215, ..., 0.06375767, 1.        ,\n        0.03706883],\n       [0.        , 0.        , 0.        , ..., 0.03230011, 0.03706883,\n        1.        ]])"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 35,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472736350
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "new[new['title'] == 'The Lego Movie'].index[0]"
+      ],
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "execution_count": 36,
+          "data": {
+            "text/plain": "744"
+          },
+          "metadata": {}
+        }
+      ],
+      "execution_count": 36,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472736806
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def recommend(movie):\r\n",
+        "    index = new[new['title'] == movie].index[0]\r\n",
+        "    distances = sorted(list(enumerate(similarity[index])),reverse=True,key = lambda x: x[1])\r\n",
+        "    for i in distances[1:6]:\r\n",
+        "        print(new.iloc[i[0]].title)"
+      ],
+      "outputs": [],
+      "execution_count": 37,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472737293
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "recommend('Iron Man')"
+      ],
+      "outputs": [],
+      "execution_count": 38,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472737725
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pickle"
+      ],
+      "outputs": [],
+      "execution_count": 39,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472738152
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "pickle.dump(new,open('movie_list.pkl','wb'))\r\n",
+        "pickle.dump(similarity,open('similarity.pkl','wb'))"
+      ],
+      "outputs": [],
+      "execution_count": 40,
+      "metadata": {
+        "jupyter": {
+          "source_hidden": false,
+          "outputs_hidden": false
+        },
+        "nteract": {
+          "transient": {
+            "deleting": false
+          }
+        },
+        "gather": {
+          "logged": 1639472738585
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python3-azureml",
+      "language": "python",
+      "display_name": "Python 3.6 - AzureML"
+    },
+    "language_info": {
+      "name": "python",
+      "version": "3.6.9",
+      "mimetype": "text/x-python",
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "pygments_lexer": "ipython3",
+      "nbconvert_exporter": "python",
+      "file_extension": ".py"
+    },
+    "kernel_info": {
+      "name": "python3-azureml"
+    },
+    "nteract": {
+      "version": "nteract-front-end@1.0.0"
+    },
+    "microsoft": {
+      "host": {
+        "AzureML": {
+          "notebookHasBeenCompleted": true
+        }
+      }
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 2
+}
